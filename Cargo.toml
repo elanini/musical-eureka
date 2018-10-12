@@ -1,0 +1,12 @@
+[package]
+name = "redauto"
+version = "0.1.0"
+authors = ["Eric Lanini <elanini@ucsc.edu>"]
+
+[dependencies]
+irc = "0.13"
+reqwest = "0.9.2"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+htmlescape = "*"
