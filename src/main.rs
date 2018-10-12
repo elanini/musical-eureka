@@ -5,6 +5,7 @@ extern crate serde;
 extern crate serde_json;
 
 extern crate irc;
+extern crate regex;
 extern crate reqwest;
 
 extern crate htmlescape;
@@ -13,6 +14,7 @@ use htmlescape::decode_html;
 mod torrent;
 
 use irc::client::prelude::*;
+use regex::Regex;
 use reqwest::header;
 use reqwest::header::{COOKIE, SET_COOKIE};
 use std::collections::HashMap;
@@ -24,7 +26,36 @@ use torrent::*;
 fn main() {
     // let somestr = "Trouble &amp; Problem";
     // println!("og {} decoded {}", somestr, decode_html(somestr).unwrap());
-    get_requests();
+    // get_requests();
+    let a = parse_announce("Perfect World [2007] [Album] - FLAC / Lossless / WEB - https://redacted.ch/torrents.php?id=589098 / https://redacted.ch/torrents.php?action=download&id=1993466 - electronic,trance,progressive.trance,tech.house,ambient".to_owned());
+    println!("{:#?}", a);
+}
+
+#[derive(Debug)]
+struct Announce {
+    artist_album: String,
+    year: u64,
+    group_id: u64,
+    torrent_id: u64,
+}
+
+fn parse_announce(announce: String) -> Announce {
+    // ([^[]+)\[(\d{4})\] \[[^\]]+\] -[^-]+- http[^ ]+id=(\d+) \/ http[^ ]+id=(\d+) - .*
+    let re = Regex::new(
+        r"([^\[]+)\[(\d{4})\] \[[^\]]+\] -[^-]+\- http[^ ]+id=(\d+) / http[^ ]+id=(\d+) - .*",
+    ).unwrap();
+    let caps: Vec<&str> = re.captures(announce.as_ref())
+        .unwrap()
+        .iter()
+        .skip(1)
+        .map(|cap| cap.unwrap().as_str())
+        .collect::<Vec<&str>>();
+    Announce {
+        artist_album: caps[0].to_owned(),
+        year: caps[1].parse().unwrap(),
+        group_id: caps[2].parse().unwrap(),
+        torrent_id: caps[3].parse().unwrap(),
+    }
 }
 
 fn get_past_release_popularity(artist_id: u64) -> f32 {
